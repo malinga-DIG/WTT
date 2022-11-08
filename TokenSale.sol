@@ -1759,10 +1759,10 @@ contract WTTokenSale is ReentrancyGuard, Ownable {
         isTokenAllowed[token_] = status_;
     }
 
-    function startSaleRound(uint256 tokenPrice_, uint256 totalSupply_, uint256 startTime_, uint256 minPurchase_,uint256 maxAmount_) public onlyOwner {
+    function startSaleRound(uint256 tokenPrice_, uint256 totalRaise, uint256 startTime_, uint256 minPurchase_,uint256 maxAmount_) public onlyOwner {
         roundId++;
-        saleRounds[roundId] = SaleRound(tokenPrice_, totalSupply_, startTime_, minPurchase_, 0, maxAmount_);
-        emit SaleRoundCreated(roundId, tokenPrice_, totalSupply_, startTime_);
+        saleRounds[roundId] = SaleRound(tokenPrice_, totalRaise, startTime_, minPurchase_, 0, maxAmount_);
+        emit SaleRoundCreated(roundId, tokenPrice_, totalRaise, startTime_);
     }
 
     function pauseSale(bool status) public onlyOwner {
