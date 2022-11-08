@@ -1685,10 +1685,10 @@ contract WTTokenSale is ReentrancyGuard, Ownable {
 
     struct SaleRound {
         uint256 tokenPrice;
-        uint256 tokenSupply; // in usd, for the current roundId
+        uint256 amountToRaise; // in usd, for the current roundId
         uint256 startTime;
         uint256 minPurchase; //in usd
-        uint256 tokensSold;  //in usd
+        uint256 amountRaised;  //in usd
         uint256 maxAmount; // in usd
     }
 
@@ -1702,9 +1702,9 @@ contract WTTokenSale is ReentrancyGuard, Ownable {
     mapping(uint256=>bool) public salePaused;
 
     constructor(){  
-        eth_priceFeed = AggregatorV3Interface(0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419);
+        eth_priceFeed = AggregatorV3Interface(0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e);
         isTokenAllowed[0x0000000000000000000000000000000000000000] = true;
-        isTokenAllowed[0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48] = true;
+        isTokenAllowed[0x8D58961f545481a7554D68Be0F5bd1eC174277eD] = true;
         isTokenAllowed[0xdAC17F958D2ee523a2206206994597C13D831ec7] = true;
     }
 
@@ -1737,14 +1737,14 @@ contract WTTokenSale is ReentrancyGuard, Ownable {
 
     function tokenSupplyforCurrentRound() public view returns(uint256){
         uint256 price = saleRounds[roundId].tokenPrice;
-        uint256 tokenSupply_ = saleRounds[roundId].tokenSupply;
+        uint256 tokenSupply_ = saleRounds[roundId].amountToRaise;
         return (tokenSupply_.mul(10**18)).div(price);
     }
 
     function tokenLeftforCurrentRound() public view returns(uint256){
         uint256 price = saleRounds[roundId].tokenPrice;
-        uint256 tokenSupply_ = saleRounds[roundId].tokenSupply;
-        uint256 tokenSold_ = saleRounds[roundId].tokensSold;
+        uint256 tokenSupply_ = saleRounds[roundId].amountToRaise;
+        uint256 tokenSold_ = saleRounds[roundId].amountRaised;
         return ((tokenSupply_.sub(tokenSold_)).mul(10**18)).div(price);
     }
 
@@ -1777,16 +1777,16 @@ contract WTTokenSale is ReentrancyGuard, Ownable {
             uint256 amt = getETHAmount(amountInUSD);
             require(msg.value == amt, "Send proper msg value");
             require(amountInUSD>=sale.minPurchase, "Buy more amount");
-            sale.tokensSold+=amountInUSD;      
-            require(sale.tokensSold<=sale.tokenSupply, "Purchase would exceed totalSupply for the round");   
+            sale.amountRaised+=amountInUSD;      
+            require(sale.amountRaised<=sale.amountToRaise, "Purchase would exceed totalSupply for the round");   
             payable(owner()).transfer(msg.value);
             _buy(msg.sender, amountInUSD);
         } else {
             TransferHelper.safeTransferFrom(token_, msg.sender, owner(), amountInUSD);
             uint256 decimalsAmount = amountInUSD*(10**12); 
             require(decimalsAmount>=sale.minPurchase, "Buy more amount");
-            sale.tokensSold+=decimalsAmount; //converting to 18 decimals as USDT/USDC has 6 decimals
-            require(sale.tokensSold<=sale.tokenSupply, "Purchase would exceed totalSupply for the round");
+            sale.amountRaised+=decimalsAmount; //converting to 18 decimals as USDT/USDC has 6 decimals
+            require(sale.amountRaised<=sale.amountToRaise, "Purchase would exceed totalSupply for the round");
             _buy(msg.sender, decimalsAmount);
         }
     }
