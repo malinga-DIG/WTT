@@ -1775,6 +1775,7 @@ contract WTTokenSale is ReentrancyGuard, Ownable {
         SaleRound storage sale = saleRounds[roundId];
         if(token_== address(0)){
             uint256 amt = getETHAmount(amountInUSD);
+            require(amt > 0, "Can't process such small amount");
             require(msg.value == amt, "Send proper msg value");
             require(amountInUSD>=sale.minPurchase, "Buy more amount");
             sale.amountRaised+=amountInUSD;      
