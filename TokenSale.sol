@@ -1703,7 +1703,6 @@ contract WTTokenSale is ReentrancyGuard, Ownable {
 
     constructor(){  
         eth_priceFeed = AggregatorV3Interface(0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e);
-        isTokenAllowed[0x0000000000000000000000000000000000000000] = true;
         isTokenAllowed[0x8D58961f545481a7554D68Be0F5bd1eC174277eD] = true;
         isTokenAllowed[0xdAC17F958D2ee523a2206206994597C13D831ec7] = true;
     }
@@ -1727,6 +1726,11 @@ contract WTTokenSale is ReentrancyGuard, Ownable {
 
     function getETHAmount(uint256 amountInUSD) public view returns(uint256){
         uint256 amt = (amountInUSD.mul(10**pfDecimals())).div(getETHPrice());
+        return amt;
+    }
+
+    function getUSDAmount(uint256 amountInETH) public view returns(uint256){
+        uint256 amt = getETHPrice().mul(amountInETH).div(10**pfDecimals());
         return amt;
     }
 
@@ -1770,26 +1774,26 @@ contract WTTokenSale is ReentrancyGuard, Ownable {
         emit SaleRoundPaused(roundId, block.timestamp, status);
     }
 
-    function buyTokens(uint256 amountInUSD, address token_) public payable nonReentrant whenSaleOn {
+    function buyTokens(uint256 amountInUSD, address token_) public nonReentrant whenSaleOn {
         require(isTokenAllowed[token_]== true, "Token not allowed");
         SaleRound storage sale = saleRounds[roundId];
-        if(token_== address(0)){
-            uint256 amt = getETHAmount(amountInUSD);
-            require(amt > 0, "Can't process such small amount");
-            require(msg.value == amt, "Send proper msg value");
-            require(amountInUSD>=sale.minPurchase, "Buy more amount");
-            sale.amountRaised+=amountInUSD;      
-            require(sale.amountRaised<=sale.amountToRaise, "Purchase would exceed totalSupply for the round");   
-            payable(owner()).transfer(msg.value);
-            _buy(msg.sender, amountInUSD);
-        } else {
-            TransferHelper.safeTransferFrom(token_, msg.sender, owner(), amountInUSD);
-            uint256 decimalsAmount = amountInUSD*(10**12); 
-            require(decimalsAmount>=sale.minPurchase, "Buy more amount");
-            sale.amountRaised+=decimalsAmount; //converting to 18 decimals as USDT/USDC has 6 decimals
-            require(sale.amountRaised<=sale.amountToRaise, "Purchase would exceed totalSupply for the round");
-            _buy(msg.sender, decimalsAmount);
-        }
+        TransferHelper.safeTransferFrom(token_, msg.sender, owner(), amountInUSD);
+        uint256 decimalsAmount = amountInUSD*(10**12); //converting to 18 decimals as USDT/USDC has 6 decimals
+        require(decimalsAmount>=sale.minPurchase, "Buy more amount");
+        sale.amountRaised+=decimalsAmount; 
+        require(sale.amountRaised<=sale.amountToRaise, "Purchase would exceed totalSupply for the round");
+        _buy(msg.sender, decimalsAmount);
+    }
+
+    function buyTokensWithETH() public payable nonReentrant whenSaleOn {
+        SaleRound storage sale = saleRounds[roundId];
+        uint256 amountInUSD = getUSDAmount(msg.value);
+        require(msg.value > 0, "Cant process such small amount");
+        require(amountInUSD>=sale.minPurchase, "Buy more amount");
+        sale.amountRaised+=amountInUSD;      
+        require(sale.amountRaised<=sale.amountToRaise, "Purchase would exceed totalSupply for the round");
+        payable(owner()).transfer(msg.value);
+        _buy(msg.sender, amountInUSD);
     }
 
     function _buy(address buyer_, uint256 amount) private {
