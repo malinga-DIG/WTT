@@ -1702,9 +1702,9 @@ contract WTTokenSale is ReentrancyGuard, Ownable {
     mapping(uint256=>bool) public salePaused;
 
     constructor(){  
-        eth_priceFeed = AggregatorV3Interface(0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e);
-        isTokenAllowed[0x8D58961f545481a7554D68Be0F5bd1eC174277eD] = true;
+        eth_priceFeed = AggregatorV3Interface(0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419);
         isTokenAllowed[0xdAC17F958D2ee523a2206206994597C13D831ec7] = true;
+        isTokenAllowed[0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48] = true;
     }
 
     modifier whenSaleOn {
